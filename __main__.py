@@ -1,5 +1,5 @@
 import logging
-from urlcollector import crawl_collector
+from webcrawler.urlcollector import crawl_collector
 from bs4 import BeautifulSoup
 from urllib import request
 
