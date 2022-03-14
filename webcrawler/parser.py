@@ -22,14 +22,14 @@ class OdaProduct(Item):
 
 
 class Parser(ABC):
-    @abstractmethod(callable)
+    @abstractmethod
     def parse(processed_url: ProcessedUrl) -> Generator[Item, None, None]:
         pass
 
 
 class OdaProductParser(Parser):
     def __init__(self):
-        self.up_pattern = re.compile(r'.+ (\d+)[\.,](\d+) per (\s+)')
+        self.up_pattern = re.compile(r'\w+ (\d+)[\.,](\d+) per (\w+)')
 
     def parse(
         self,
@@ -37,14 +37,14 @@ class OdaProductParser(Parser):
     ) -> Generator[OdaProduct, None, None]:
         url, html = processed_url
         details = html.find('div', class_='product-detail')
-        category = [li.get_text() for li in details.ol.find_all('li')]
-        name = details.h1.get_text()
-        description = details.find('div', class_='description').get_text()
+        category = [li.get_text().strip() for li in details.ol.find_all('li')]
+        name = details.h1.get_text().strip()
+        description = details.find('p', class_='description')
         price_box = details.find('div', itemprop='price')
         price = float(price_box['content'])
-        currency = price_box.find('span', itemProp='priceCurrency')['content']
+        currency = price_box.find('span', itemprop='priceCurrency')['content']
         up_box = details.find('div', class_='unit-price')
-        up_match = self.up_pattern.search(up_box.get_text())
+        up_match = self.up_pattern.search(up_box.get_text().strip())
 
         yield OdaProduct(
             url,
@@ -52,7 +52,7 @@ class OdaProductParser(Parser):
             category,
             price,
             currency,
-            description,
+            description.get_text().strip() if description else '',
             float('{}.{}'.format(up_match.group(1), up_match.group(2))),
             up_match.group(3)
         )

@@ -1,24 +1,32 @@
 import logging
 from webcrawler.urlcollector import UrlCollector, CollectorType
+from webcrawler.parser import OdaProductParser
+from webcrawler.output import LogOutput
+from webcrawler.runner import Runner
 
 
 def run():
-    logging.basicConfig(format='%(message)s', level=logging.INFO)
+    logger = logging.Logger('webcrawler', level=logging.INFO)
     pattern = r'^.+\/products\/\d+\-[^\/]+\/$'
-    targets = [
-        r'\/products\/',
-        r'\/categories\/\d+\-[^\/]+\/$'
-    ]
-    print('Testing crawl collector...\n')
     collector = UrlCollector(
         'https://oda.com/',
         pattern,
         CollectorType.ROBOTSTXT,
+        logger=logger
     )
-    for processed in collector.collect():
-        print(processed.url)
+    output = LogOutput(logger)
+    parser = OdaProductParser()
 
-    print('Done\n')
+    runner = Runner(
+        collector,
+        parser,
+        output,
+        15,
+        0,
+        logger
+    )
+
+    runner.run()
 
 
 if __name__ == '__main__':
