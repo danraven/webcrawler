@@ -1,24 +1,22 @@
 import logging
-from webcrawler.urlcollector import crawl_collector
-from bs4 import BeautifulSoup
-from urllib import request
+from webcrawler.urlcollector import UrlCollector, CollectorType
 
 
 def run():
-    logging.basicConfig(format='%(message)s', level=logging.DEBUG)
-    limit = 10
+    logging.basicConfig(format='%(message)s', level=logging.INFO)
     pattern = r'^.+\/products\/\d+\-[^\/]+\/$'
     targets = [
         r'\/products\/',
         r'\/categories\/\d+\-[^\/]+\/$'
     ]
     print('Testing crawl collector...\n')
-    collector = crawl_collector('/', 'https://oda.com/', pattern, targets)
-    url = collector.send(None)
-    for i in range(1, limit):
-        r = request.urlopen(url).read()
-        soup = BeautifulSoup(r, 'lxml')
-        url = collector.send(soup)
+    collector = UrlCollector(
+        'https://oda.com/',
+        pattern,
+        CollectorType.ROBOTSTXT,
+    )
+    for processed in collector.collect():
+        print(processed.url)
 
     print('Done\n')
 
