@@ -13,6 +13,7 @@ class Item:
 @dataclass
 class OdaProduct(Item):
     name: str
+    name_extra: str
     category: list[str]
     price: float
     currency: str
@@ -37,8 +38,14 @@ class OdaProductParser(Parser):
     ) -> Generator[OdaProduct, None, None]:
         url, html = processed_url
         details = html.find('div', class_='product-detail')
-        category = [li.get_text().strip() for li in details.ol.find_all('li')]
-        name = details.h1.get_text().strip()
+        category = []
+        if details.ol:
+            category = [
+                li.get_text().strip() for li in details.ol.find_all('li')
+            ]
+        header = details.h1
+        name = header.find(text=True, recursive=False).get_text().strip()
+        name_sub = header.find('span', class_='name-extra').get_text().strip()
         description = details.find('p', class_='description')
         price_box = details.find('div', itemprop='price')
         price = float(price_box['content'])
@@ -49,6 +56,7 @@ class OdaProductParser(Parser):
         yield OdaProduct(
             url,
             name,
+            name_sub,
             category,
             price,
             currency,

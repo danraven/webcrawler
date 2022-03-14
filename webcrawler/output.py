@@ -18,5 +18,4 @@ class LogOutput(Output):
         self.logger = logger
 
     def add(self, item: Item) -> None:
-        print(item)
         self.logger.info('%s', item)
