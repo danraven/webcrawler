@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 beautifulsoup4 = "*"
 lxml = "*"
+toml = "*"
 
 [dev-packages]
 flake8 = "*"

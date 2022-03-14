@@ -1,0 +1,40 @@
+# Product data fetcher for oda.com
+
+# Title of the process
+title = "Oda product parser"
+
+# Runner-related config
+[runner]
+# Sets the log level for the runner.
+# Should correspond to the constants declared in logging
+log_level = "INFO"
+
+# Sets the name of the Logger instance
+log_name = "oda"
+
+# Hard limit of parsed pages. The runner stops once it
+# hits this number. Note that this applies to pages to be
+# scraped, not scarped items. Setting this to 0 removes this
+# limit.
+limit = 15
+
+# Minimum delay between fetching and parsing pages (in milliseconds)
+delay = 0
+
+# Collector-related config
+[url_collector]
+# Module path to the UrlCollector class to be used
+classname = "webcrawler.urlcollector.RobotsTxtCollector"
+
+base_url = "https://oda.com/"
+target_pattern = '^.+\/products\/\d+\-[^\/]+\/$'
+
+# Parser-related config
+[parser]
+# Module path to the Parser class to be used
+classname = "webcrawler.parser.OdaProductParser"
+
+# Output-related config
+[output]
+# Module path to the Output class to be used
+classname = "webcrawler.output.LogOutput"
