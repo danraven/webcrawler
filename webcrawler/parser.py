@@ -43,7 +43,7 @@ class OdaProductParser(Parser):
             category = [
                 li.get_text().strip() for li in details.ol.find_all('li')
             ]
-        header = details.h1
+        header = details.h1.span
         name = header.find(text=True, recursive=False).get_text().strip()
         name_sub = header.find('span', class_='name-extra').get_text().strip()
         description = details.find('p', class_='description')
