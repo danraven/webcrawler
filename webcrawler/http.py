@@ -17,5 +17,5 @@ class InvalidStatusError(InvalidResponseError):
 def parse_html(url: str) -> BeautifulSoup:
     r = request.urlopen(url)
     if int(r.status) != 200:
-        raise InvalidStatusError('Invalid status code, expected 200', r)
-    return BeautifulSoup(r.read(), 'lxml')
+        raise InvalidStatusError("Invalid status code, expected 200", r)
+    return BeautifulSoup(r.read(), "lxml")

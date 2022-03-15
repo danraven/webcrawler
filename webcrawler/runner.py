@@ -15,7 +15,7 @@ class Runner:
         output: Output,
         limit: int = 0,
         delay: int = 0,
-        logger: logging.Logger = logging
+        logger: logging.Logger = logging,
     ):
         self.collector = collector
         self.parser = parser
@@ -26,9 +26,7 @@ class Runner:
 
     @classmethod
     def from_config(cls, conf: Config):
-        CollectorClass = get_conf_class(
-            conf.url_collector_config.classname
-        )
+        CollectorClass = get_conf_class(conf.url_collector_config.classname)
         OutputClass = get_conf_class(conf.output_config.classname)
         ParserClass = get_conf_class(conf.parser_config.classname)
 
@@ -46,12 +44,12 @@ class Runner:
             OutputClass(logger=logger, **conf.output_config.options),
             conf.limit,
             conf.delay,
-            logger
+            logger,
         )
 
     def run(self) -> None:
         i = 0
-        self.logger.info('Starting runner')
+        self.logger.info("Starting runner")
         self.output.start()
         try:
             for url in self.collector.collect():
@@ -63,13 +61,13 @@ class Runner:
                 if self.delay:
                     sleep(self.delay)
         except Exception as e:
-            self.logger.error('Error during crawl, closing output')
+            self.logger.error("Error during crawl, closing output")
             self.output.end()
             raise e
         self.output.end()
-        self.logger.info('Runner finished')
+        self.logger.info("Runner finished")
 
 
 def get_conf_class(classname):
-    parts = classname.split('.')
-    return getattr(import_module('.'.join(parts[:-1])), parts[-1])
+    parts = classname.split(".")
+    return getattr(import_module(".".join(parts[:-1])), parts[-1])

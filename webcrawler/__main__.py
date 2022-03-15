@@ -4,22 +4,20 @@ import argparse
 
 
 def run():
-    parser = argparse.ArgumentParser(
-        description="Basic website crawler/scraper"
-    )
+    parser = argparse.ArgumentParser(description="Basic website crawler/scraper")
     parser.add_argument(
-        'config',
+        "config",
         metavar="path/to/config.toml",
         nargs=1,
-        help="Path to the TOML config for the runner"
+        help="Path to the TOML config for the runner",
     )
     args = parser.parse_args()
     runner = Runner.from_config(Config.from_toml(args.config))
     try:
         runner.run()
     except KeyboardInterrupt:
-        runner.logger.info('Received interrupt signal, closing.')
+        runner.logger.info("Received interrupt signal, closing.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run()

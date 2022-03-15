@@ -8,11 +8,10 @@ import logging
 import re
 
 
-CollectedUrl = NamedTuple('CollectedUrl', [('url', str), ('hit', bool)])
-ProcessedUrl = NamedTuple('ProcessedUrl', [
-    ('url', str),
-    ('html', Optional[BeautifulSoup])
-])
+CollectedUrl = NamedTuple("CollectedUrl", [("url", str), ("hit", bool)])
+ProcessedUrl = NamedTuple(
+    "ProcessedUrl", [("url", str), ("html", Optional[BeautifulSoup])]
+)
 
 CollectorGenerator = Generator[CollectedUrl, ProcessedUrl, None]
 
@@ -25,7 +24,7 @@ class UrlCollector(ABC):
         logger: logging.Logger = logging,
         **kwargs
     ):
-        self.base_url = base_url.strip('/') + '/'
+        self.base_url = base_url.strip("/") + "/"
         self.target_pattern = re.compile(target_pattern)
         self.logger = logger
         self.collector = self._init_collector()
@@ -41,22 +40,19 @@ class UrlCollector(ABC):
         try:
             while True:
                 if c.url in self.found_urls:
-                    self.logger.debug(
-                        'Skipping already hit URL: %s',
-                        c.url
-                    )
+                    self.logger.debug("Skipping already hit URL: %s", c.url)
                     c = self.collector.send(ProcessedUrl(c.url, None))
                     continue
                 self.found_urls.append(c.url)
                 try:
                     soup = parse_html(c.url)
                 except URLError as err:
-                    self.logger.warn('Unable to parse URL: %s', err)
+                    self.logger.warn("Unable to parse URL: %s", err)
                     c = self.collector.send(ProcessedUrl(c.url, None))
                     continue
                 processed = ProcessedUrl(c.url, soup)
                 if c.hit:
-                    self.logger.debug('URL hit: %s', c.url)
+                    self.logger.debug("URL hit: %s", c.url)
                     yield processed
                 c = self.collector.send(processed)
         except StopIteration:
@@ -81,37 +77,36 @@ class SitemapCollector(UrlCollector):
     logger: Logger
         Logger instance to be used for debugging
     """
+
     def __init__(
         self,
         base_url: str,
         target_pattern: str,
-        sitemap_path: str = 'sitemap.xml',
-        logger: logging.Logger = logging
+        sitemap_path: str = "sitemap.xml",
+        logger: logging.Logger = logging,
     ):
-        self.sitemap_path = sitemap_path.strip('/')
+        self.sitemap_path = sitemap_path.strip("/")
         super().__init__(base_url, target_pattern, logger)
 
     def _init_collector(self) -> CollectorGenerator:
-        return self._get_sitemap_generator(
-            self.base_url + self.sitemap_path
-        )
+        return self._get_sitemap_generator(self.base_url + self.sitemap_path)
 
     def _get_sitemap_generator(self, sitemap_url: str) -> CollectorGenerator:
-        self.logger.debug('Parsing sitemap: %s', sitemap_url)
+        self.logger.debug("Parsing sitemap: %s", sitemap_url)
 
         try:
             soup = parse_html(sitemap_url)
         except URLError as err:
-            self.logger.error('Could not parse sitemap: %s', err)
+            self.logger.error("Could not parse sitemap: %s", err)
 
-        for submap in soup.find_all('sitemap'):
-            self.logger.debug('Sitemap found: %s', submap.loc.text)
+        for submap in soup.find_all("sitemap"):
+            self.logger.debug("Sitemap found: %s", submap.loc.text)
             yield from self._get_sitemap_generator(submap.loc.text)
-        for url in soup.find_all('url'):
+        for url in soup.find_all("url"):
             location = url.loc.text
             if self.target_pattern.search(location) is None:
                 continue
-            self.logger.debug('Matched URL from sitemap: %s', location)
+            self.logger.debug("Matched URL from sitemap: %s", location)
             yield CollectedUrl(location, True)
 
 
@@ -130,21 +125,22 @@ class RobotsTxtCollector(SitemapCollector):
     logger: Logger
         Logger instance to be used for debugging
     """
+
     def __init__(
         self,
         base_url: str,
         target_pattern: str,
-        robots_path: str = 'robots.txt',
-        logger: logging.Logger = logging
+        robots_path: str = "robots.txt",
+        logger: logging.Logger = logging,
     ):
-        self.robots_path = robots_path.strip('/')
-        super().__init__(base_url, '', target_pattern, logger)
+        self.robots_path = robots_path.strip("/")
+        super().__init__(base_url, "", target_pattern, logger)
 
     def _init_collector(self) -> CollectorGenerator:
         parser = RobotFileParser(self.base_url + self.robots_path)
         parser.read()
         for sitemap_url in parser.site_maps():
-            self.logger.debug('Sitemap found: %s', sitemap_url)
+            self.logger.debug("Sitemap found: %s", sitemap_url)
             yield from self._get_sitemap_generator(sitemap_url)
 
 
@@ -169,46 +165,47 @@ class CrawlCollector(UrlCollector):
     logger: Logger
         Logger instance to be used for debugging
     """
+
     def __init__(
         self,
         base_url: str,
         target_pattern: str,
         crawl_pattern: Union[str, list[str]],
-        start_path: str = '',
+        start_path: str = "",
         logger: logging.Logger = logging,
         **kwargs
     ):
         if crawl_pattern is not list:
             crawl_pattern = [crawl_pattern]
-        self.start_path = start_path.lstrip('/')
-        self.crawl_pattern = re.compile('|'.join(crawl_pattern))
+        self.start_path = start_path.lstrip("/")
+        self.crawl_pattern = re.compile("|".join(crawl_pattern))
         super().__init__(base_url, target_pattern, logger)
 
     def _init_collector(self) -> CollectorGenerator:
         return self._get_crawl_generator(self.base_url + self.start_path)
 
     def _get_crawl_generator(self, crawl_url) -> CollectorGenerator:
-        self.logger.debug('Crawling URL: %s', crawl_url)
+        self.logger.debug("Crawling URL: %s", crawl_url)
         processed = yield CollectedUrl(
-            crawl_url,
-            bool(self.target_pattern.search(crawl_url))
+            crawl_url, bool(self.target_pattern.search(crawl_url))
         )
 
         if not processed.html:
             return
 
-        links = (processed.html.find_all('a', href=self.target_pattern)
-                 + processed.html.find_all('a', href=self.crawl_pattern))
+        links = processed.html.find_all(
+            "a", href=self.target_pattern
+        ) + processed.html.find_all("a", href=self.crawl_pattern)
 
         for link in links:
-            href = self._format_href(link.get('href'))
+            href = self._format_href(link.get("href"))
             if not href:
                 continue
             yield from self._get_crawl_generator(href)
 
     def _format_href(self, href: str) -> Optional[str]:
-        if href.startswith('/'):
-            return self.base_url + href.lstrip('/')
+        if href.startswith("/"):
+            return self.base_url + href.lstrip("/")
         elif href.startswith(self.base_url):
             return href
         return None

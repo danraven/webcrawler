@@ -30,27 +30,22 @@ class Parser(ABC):
 
 class OdaProductParser(Parser):
     def __init__(self):
-        self.up_pattern = re.compile(r'\w+ (\d+)[\.,](\d+) per (\w+)')
+        self.up_pattern = re.compile(r"\w+ (\d+)[\.,](\d+) per (\w+)")
 
-    def parse(
-        self,
-        processed_url: ProcessedUrl
-    ) -> Generator[OdaProduct, None, None]:
+    def parse(self, processed_url: ProcessedUrl) -> Generator[OdaProduct, None, None]:
         url, html = processed_url
-        details = html.find('div', class_='product-detail')
+        details = html.find("div", class_="product-detail")
         category = []
         if details.ol:
-            category = [
-                li.get_text().strip() for li in details.ol.find_all('li')
-            ]
+            category = [li.get_text().strip() for li in details.ol.find_all("li")]
         header = details.h1.span
         name = header.find(text=True, recursive=False).get_text().strip()
-        name_sub = header.find('span', class_='name-extra').get_text().strip()
-        description = details.find('p', class_='description')
-        price_box = details.find('div', itemprop='price')
-        price = float(price_box['content'])
-        currency = price_box.find('span', itemprop='priceCurrency')['content']
-        up_box = details.find('div', class_='unit-price')
+        name_sub = header.find("span", class_="name-extra").get_text().strip()
+        description = details.find("p", class_="description")
+        price_box = details.find("div", itemprop="price")
+        price = float(price_box["content"])
+        currency = price_box.find("span", itemprop="priceCurrency")["content"]
+        up_box = details.find("div", class_="unit-price")
         up_match = self.up_pattern.search(up_box.get_text().strip())
 
         yield OdaProduct(
@@ -60,7 +55,7 @@ class OdaProductParser(Parser):
             category,
             price,
             currency,
-            description.get_text().strip() if description else '',
-            float('{}.{}'.format(up_match.group(1), up_match.group(2))),
-            up_match.group(3)
+            description.get_text().strip() if description else "",
+            float("{}.{}".format(up_match.group(1), up_match.group(2))),
+            up_match.group(3),
         )
