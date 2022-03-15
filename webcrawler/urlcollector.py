@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 from abc import ABC, abstractmethod
-from typing import Generator, NamedTuple, Optional
+from typing import Generator, NamedTuple, Optional, Union
 from urllib.robotparser import RobotFileParser
 from urllib.error import URLError
 from webcrawler.http import parse_html
@@ -84,8 +84,8 @@ class SitemapCollector(UrlCollector):
     def __init__(
         self,
         base_url: str,
-        sitemap_path: str,
         target_pattern: str,
+        sitemap_path: str = 'sitemap.xml',
         logger: logging.Logger = logging
     ):
         self.sitemap_path = sitemap_path.strip('/')
@@ -173,13 +173,15 @@ class CrawlCollector(UrlCollector):
         self,
         base_url: str,
         target_pattern: str,
-        crawl_pattern: str,
+        crawl_pattern: Union[str, list[str]],
         start_path: str = '',
         logger: logging.Logger = logging,
         **kwargs
     ):
+        if crawl_pattern is not list:
+            crawl_pattern = [crawl_pattern]
         self.start_path = start_path.lstrip('/')
-        self.crawl_pattern = re.compile(crawl_pattern)
+        self.crawl_pattern = re.compile('|'.join(crawl_pattern))
         super().__init__(base_url, target_pattern, logger)
 
     def _init_collector(self) -> CollectorGenerator:
