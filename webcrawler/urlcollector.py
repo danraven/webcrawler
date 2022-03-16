@@ -134,7 +134,7 @@ class RobotsTxtCollector(SitemapCollector):
         logger: logging.Logger = logging,
     ):
         self.robots_path = robots_path.strip("/")
-        super().__init__(base_url, "", target_pattern, logger)
+        super().__init__(base_url, target_pattern, "", logger)
 
     def _init_collector(self) -> CollectorGenerator:
         parser = RobotFileParser(self.base_url + self.robots_path)
